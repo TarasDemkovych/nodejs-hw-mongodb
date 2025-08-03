@@ -5,16 +5,17 @@ import contactsRouter from './routes/contactsRouter.js';
 export const setupServer = () => {
   const app = express();
   app.get('/', (req, res) => {
-    res.json({ message: ' API is running successfully!' });
+    res.json();
+    res.redirect('/contacts');
   });
 
-  app.use((req, res, next) => {
-    res.setHeader(
-      'Content-Security-Policy',
-      "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://safeframe.googlesyndication.com;",
-    );
-    next();
-  });
+  // app.use((req, res, next) => {
+  //   res.setHeader(
+  //     'Content-Security-Policy',
+  //     "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://safeframe.googlesyndication.com;",
+  //   );
+  //   next();
+  // });
   app.use(cors());
   app.use(pino());
 

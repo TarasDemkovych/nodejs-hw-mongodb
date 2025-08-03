@@ -4,6 +4,10 @@ import pino from 'pino-http';
 import contactsRouter from './routes/contactsRouter.js';
 export const setupServer = () => {
   const app = express();
+  app.get('/', (req, res) => {
+    res.json({ message: ' API is running successfully!' });
+  });
+
   app.use((req, res, next) => {
     res.setHeader(
       'Content-Security-Policy',

@@ -4,13 +4,11 @@ import pino from 'pino-http';
 import contactsRouter from './routes/contactsRouter.js';
 export const setupServer = () => {
   const app = express();
-  app.use((req, res, next) => {
-    res.setHeader(
-      'Content-Security-Policy',
-      "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://safeframe.googlesyndication.com;",
-    );
-    next();
+  app.get('/', (req, res) => {
+    // res.json();
+    res.redirect('/contacts');
   });
+
   app.use(cors());
   app.use(pino());
 

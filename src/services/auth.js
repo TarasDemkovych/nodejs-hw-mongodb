@@ -77,7 +77,7 @@ export const refreshSession = async (refreshToken) => {
     refreshTokenValidUntil: new Date(now.getTime() + REFRESH_TOKEN_TTL),
   });
 
-  return { accessToken: newAccessToken };
+  return { accessToken: newAccessToken, refreshToken: newRefreshToken };
 };
 export const logout = async (refreshToken) => {
   const session = await SessionCollection.findOne({ refreshToken });

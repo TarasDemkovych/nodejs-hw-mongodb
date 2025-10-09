@@ -15,10 +15,8 @@ import {
 } from '../validation/contacts.js';
 
 import { authenticate } from '../middlewares/authenticate.js';
-
-router.use(authenticate);
-
 const router = Router();
+router.use(authenticate);
 
 router.get('/', ctrlWrapper(getAllContactsController));
 

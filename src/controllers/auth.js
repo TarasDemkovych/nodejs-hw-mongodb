@@ -22,19 +22,19 @@ export const loginController = async (req, res) => {
   });
 };
 
-export const registerController = async (req, res) => {
-  const { name, email, password } = req.body;
-  const user = await registerUser({ name, email, password });
+export const registerController = async (req, res, next) => {
+  try {
+    const user = await registerUser(req.body);
+    if (!user) throw createHttpError(409, 'Email in use');
 
-  if (!user) {
-    throw createHttpError(409, 'Email in use');
+    res.status(201).json({
+      status: 201,
+      message: 'Successfully registered a user!',
+      data: user,
+    });
+  } catch (err) {
+    next(err);
   }
-
-  res.status(201).json({
-    status: 201,
-    message: 'Successfully registered a user!',
-    data: user,
-  });
 };
 
 export const refreshController = async (req, res, next) => {
@@ -45,8 +45,15 @@ export const refreshController = async (req, res, next) => {
       throw createHttpError(401, 'Refresh token missing');
     }
 
-    const { accessToken } = await refreshSession(refreshToken);
-
+    const { accessToken, refreshToken: newRefreshToken } = await refreshSession(
+      refreshToken,
+    );
+    res.cookie('refreshToken', newRefreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+    });
     res.status(200).json({
       status: 200,
       message: 'Successfully refreshed a session!',

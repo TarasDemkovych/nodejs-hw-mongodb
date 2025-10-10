@@ -1,11 +1,13 @@
 import express from 'express';
 import cors from 'cors';
 import pino from 'pino-http';
-
 import contactsRouter from './routes/contacts.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 import { notFoundHandler } from './middlewares/notFoundHandler.js';
 import { getEnvVar } from './utils/getEnvVar.js';
+import cookieParser from 'cookie-parser';
+import authRouter from './routes/auth.js';
+
 const PORT = +getEnvVar('PORT', '3000');
 
 export const setupServer = () => {
@@ -20,6 +22,8 @@ export const setupServer = () => {
       },
     }),
   );
+  app.use(cookieParser());
+  app.use('/auth', authRouter);
 
   app.use('/contacts', contactsRouter);
   app.use('/', notFoundHandler);

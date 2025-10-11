@@ -6,5 +6,11 @@ cloudinary.config({
   api_key: getEnvVar('CLOUDINARY_API_KEY'),
   api_secret: getEnvVar('CLOUDINARY_API_SECRET'),
 });
+export const uploadToCloudinary = async (filePath) => {
+  const result = await cloudinary.uploader.upload(filePath, {
+    folder: 'contacts_photos',
+    transformation: [{ width: 500, height: 500, crop: 'limit' }],
+  });
 
-export default cloudinary;
+  return result.secure_url;
+};

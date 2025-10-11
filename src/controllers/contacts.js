@@ -6,7 +6,7 @@ import {
   updateContact,
 } from '../services/contacts.js';
 import createHttpError from 'http-errors';
-
+import { uploadToCloudinary } from '../utils/cloudinary.js';
 export const getAllContactsController = async (req, res, next) => {
   try {
     const {
@@ -65,7 +65,9 @@ export const getContactByIdController = async (req, res, next) => {
 export const createContactController = async (req, res) => {
   const contact = await createContact(req.body);
   if (req.file) {
-    contact.photo = req.file.path;
+    const photoUrl = await uploadToCloudinary(req.file.path);
+    contact.photo = photoUrl;
+    await contact.save();
   }
 
   res.status(201).json({
@@ -77,6 +79,12 @@ export const createContactController = async (req, res) => {
 
 export const patchContactController = async (req, res, next) => {
   const { contactId } = req.params;
+
+  if (req.file) {
+    const photoUrl = await uploadToCloudinary(req.file.path);
+    req.body.photo = photoUrl;
+  }
+
   const result = await updateContact(contactId, req.body);
 
   if (!result) {

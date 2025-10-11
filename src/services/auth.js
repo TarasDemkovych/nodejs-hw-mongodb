@@ -4,7 +4,6 @@ import jwt from 'jsonwebtoken';
 import { SessionCollection } from '../db/models/session.js';
 import { getEnvVar } from '../utils/getEnvVar.js';
 import createHttpError from 'http-errors';
-import { createTokens } from '../utils/createTokens.js';
 
 const JWT_SECRET = getEnvVar('JWT_SECRET');
 const ACCESS_TOKEN_TTL = 15 * 60 * 1000;
@@ -54,9 +53,13 @@ export const registerUser = async ({ name, email, password }) => {
 
   return userWithoutPassword;
 };
+
 export const refreshSession = async (refreshToken) => {
   const session = await SessionCollection.findOne({ refreshToken });
-  if (!session) throw createHttpError(401, 'Session not found');
+
+  if (!session) {
+    throw createHttpError(401, 'Session not found');
+  }
 
   const now = new Date();
   if (session.refreshTokenValidUntil < now) {
@@ -64,21 +67,13 @@ export const refreshSession = async (refreshToken) => {
     throw createHttpError(401, 'Refresh token expired');
   }
 
-  await SessionCollection.deleteOne({ _id: session._id });
-
-  const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
-    createTokens({ userId: session.userId });
-
-  await SessionCollection.create({
-    userId: session.userId,
-    accessToken: newAccessToken,
-    refreshToken: newRefreshToken,
-    accessTokenValidUntil: new Date(now.getTime() + ACCESS_TOKEN_TTL),
-    refreshTokenValidUntil: new Date(now.getTime() + REFRESH_TOKEN_TTL),
+  const accessToken = jwt.sign({ userId: session.userId }, JWT_SECRET, {
+    expiresIn: '15m',
   });
 
-  return { accessToken: newAccessToken, refreshToken: newRefreshToken };
+  return { accessToken };
 };
+
 export const logout = async (refreshToken) => {
   const session = await SessionCollection.findOne({ refreshToken });
 

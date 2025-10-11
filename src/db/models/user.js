@@ -21,4 +21,4 @@ const userSchema = new Schema(
   { timestamps: true },
 );
 
-export const UserCollection = model('users', userSchema);
+export const UserCollection = model('User', userSchema);

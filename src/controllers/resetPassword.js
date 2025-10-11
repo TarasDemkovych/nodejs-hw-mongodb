@@ -2,7 +2,7 @@ import createHttpError from 'http-errors';
 import jwt from 'jsonwebtoken';
 import { getEnvVar } from '../utils/getEnvVar.js';
 import { sendEmail } from '../utils/sendEmail.js';
-import { User } from '../db/models/User.js';
+import { UserCollection } from '../db/models/user.js';
 import bcrypt from 'bcryptjs';
 
 const JWT_SECRET = getEnvVar('JWT_SECRET');
@@ -12,7 +12,7 @@ export const sendResetEmailController = async (req, res, next) => {
   try {
     const { email } = req.body;
 
-    const user = await User.findOne({ email });
+    const user = await UserCollection.findOne({ email });
     if (!user) throw createHttpError(404, 'User not found!');
 
     const token = jwt.sign({ email }, JWT_SECRET, { expiresIn: '5m' });
@@ -61,7 +61,7 @@ export const resetPasswordController = async (req, res, next) => {
       throw createHttpError(401, 'Token is expired or invalid.');
     }
 
-    const user = await User.findOne({ email: decoded.email });
+    const user = await UserCollection.findOne({ email: decoded.email });
     if (!user) throw createHttpError(404, 'User not found!');
 
     user.password = await bcrypt.hash(password, 10);

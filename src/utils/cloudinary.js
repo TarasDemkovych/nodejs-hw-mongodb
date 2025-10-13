@@ -14,3 +14,4 @@ export const uploadToCloudinary = async (filePath) => {
 
   return result.secure_url;
 };
+export default cloudinary;

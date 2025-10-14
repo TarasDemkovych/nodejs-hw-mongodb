@@ -11,19 +11,29 @@ export const authenticate = async (req, res, next) => {
     const authHeader = req.headers.authorization || '';
     const token = authHeader.split(' ')[1];
 
-    if (!token) throw createHttpError(401, 'No token provided');
+    if (!token) {
+      throw createHttpError(401, 'No token provided');
+    }
 
     const payload = jwt.verify(token, JWT_SECRET);
 
     const session = await SessionCollection.findOne({ accessToken: token });
-    if (!session) throw createHttpError(401, 'Session not found');
+    if (!session) {
+      throw createHttpError(401, 'Session not found');
+    }
 
     if (new Date() > session.accessTokenValidUntil) {
       throw createHttpError(401, 'Access token expired');
     }
 
     const user = await UserCollection.findById(payload.userId);
-    req.user = user;
+    if (!user) {
+      throw createHttpError(401, 'User not found');
+    }
+    req.user = {
+      _id: user._id,
+      email: user.email,
+    };
 
     next();
   } catch (err) {

@@ -1,75 +1,89 @@
 import {
-  registerUser,
   loginUser,
-  refreshSession,
-  logout,
+  logoutUser,
+  refreshUserSession,
+  registerUser,
+  resetPassword,
+  sendResetTokenEmail,
 } from '../services/auth.js';
-import createHttpError from 'http-errors';
 
-export const loginController = async (req, res, next) => {
-  try {
-    const tokens = await loginUser(req.body);
-    if (!tokens) throw createHttpError(401, 'Invalid email or password');
+const setupSession = (res, session) => {
+  res.cookie('refreshToken', session.refreshToken, {
+    httpOnly: true,
+    expires: session.refreshTokenValidUntil,
+  });
 
-    res.cookie('refreshToken', tokens.refreshToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'strict',
-      maxAge: 30 * 24 * 60 * 60 * 1000,
-    });
-
-    res.status(200).json({
-      status: 200,
-      message: 'Successfully logged in an user!',
-      data: { accessToken: tokens.accessToken },
-    });
-  } catch (err) {
-    next(err);
-  }
+  res.cookie('sessionId', session._id, {
+    httpOnly: true,
+    expires: session.refreshTokenValidUntil,
+  });
 };
 
-export const registerController = async (req, res, next) => {
-  try {
-    const user = await registerUser(req.body);
-    if (!user) throw createHttpError(409, 'Email in use');
+export const registerUserController = async (req, res) => {
+  const user = await registerUser(req.body);
 
-    res.status(201).json({
-      status: 201,
-      message: 'Successfully registered a user!',
-      data: user,
-    });
-  } catch (err) {
-    next(err);
-  }
+  res.status(201).json({
+    status: 201,
+    message: 'Successfully register a User.',
+    data: user,
+  });
 };
 
-export const refreshController = async (req, res, next) => {
-  try {
-    const { refreshToken } = req.cookies;
-    if (!refreshToken) throw createHttpError(401, 'Refresh token missing');
+export const loginUserController = async (req, res) => {
+  const session = await loginUser(req.body);
 
-    const { accessToken } = await refreshSession(refreshToken);
+  setupSession(res, session);
 
-    res.status(200).json({
-      status: 200,
-      message: 'Successfully refreshed a session!',
-      data: { accessToken },
-    });
-  } catch (err) {
-    next(err);
-  }
+  res.json({
+    status: 200,
+    message: 'Successfully logged in an user!',
+    data: {
+      accessToken: session.accessToken,
+    },
+  });
 };
 
-export const logoutController = async (req, res, next) => {
-  try {
-    const { refreshToken } = req.cookies;
-    if (!refreshToken) throw createHttpError(401, 'Refresh token missing');
+export const logoutUserController = async (req, res) => {
+  await logoutUser(req.cookies.sessionId);
 
-    await logout(refreshToken);
+  res.clearCookie('sessionId');
+  res.clearCookie('refreshToken');
 
-    res.clearCookie('refreshToken');
-    res.status(204).send();
-  } catch (err) {
-    next(err);
-  }
+  res.status(204).send();
+};
+
+export const refreshUserSessionController = async (req, res) => {
+  const session = await refreshUserSession({
+    sessionId: req.cookies.sessionId,
+    refreshToken: req.cookies.refreshToken,
+  });
+
+  setupSession(res, session);
+
+  res.json({
+    status: 200,
+    message: 'Successfully refreshed a session',
+    data: {
+      accessToken: session.accessToken,
+    },
+  });
+};
+
+export const sendResetEmailController = async (req, res) => {
+  await sendResetTokenEmail(req.body.email);
+
+  res.json({
+    status: 200,
+    message: 'Reset password email has been successfully sent.',
+  });
+};
+
+export const resetPasswordController = async (req, res) => {
+  console.log('req.body:', req.body);
+  await resetPassword(req.body.token, req.body.password);
+
+  res.json({
+    status: 200,
+    message: 'Password has been successfully reset.',
+  });
 };

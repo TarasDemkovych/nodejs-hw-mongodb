@@ -16,23 +16,37 @@ export const loginUser = async ({ email, password }) => {
   const isPasswordValid = await bcrypt.compare(password, user.password);
   if (!isPasswordValid) return null;
 
-  await SessionCollection.deleteMany({ userId: user._id });
-
   const accessToken = jwt.sign({ userId: user._id }, JWT_SECRET, {
     expiresIn: '15m',
   });
+
   const refreshToken = jwt.sign({ userId: user._id }, JWT_SECRET, {
     expiresIn: '30d',
   });
 
   const now = new Date();
-  await SessionCollection.create({
-    userId: user._id,
-    accessToken,
-    refreshToken,
-    accessTokenValidUntil: new Date(now.getTime() + ACCESS_TOKEN_TTL),
-    refreshTokenValidUntil: new Date(now.getTime() + REFRESH_TOKEN_TTL),
-  });
+
+  const existingSession = await SessionCollection.findOne({ userId: user._id });
+
+  if (existingSession) {
+    existingSession.accessToken = accessToken;
+    existingSession.refreshToken = refreshToken;
+    existingSession.accessTokenValidUntil = new Date(
+      now.getTime() + ACCESS_TOKEN_TTL,
+    );
+    existingSession.refreshTokenValidUntil = new Date(
+      now.getTime() + REFRESH_TOKEN_TTL,
+    );
+    await existingSession.save();
+  } else {
+    await SessionCollection.create({
+      userId: user._id,
+      accessToken,
+      refreshToken,
+      accessTokenValidUntil: new Date(now.getTime() + ACCESS_TOKEN_TTL),
+      refreshTokenValidUntil: new Date(now.getTime() + REFRESH_TOKEN_TTL),
+    });
+  }
 
   return { accessToken, refreshToken };
 };
@@ -57,9 +71,7 @@ export const registerUser = async ({ name, email, password }) => {
 export const refreshSession = async (refreshToken) => {
   const session = await SessionCollection.findOne({ refreshToken });
 
-  if (!session) {
-    throw createHttpError(401, 'Session not found');
-  }
+  if (!session) throw createHttpError(401, 'Session not found');
 
   const now = new Date();
   if (session.refreshTokenValidUntil < now) {
@@ -71,15 +83,17 @@ export const refreshSession = async (refreshToken) => {
     expiresIn: '15m',
   });
 
+  session.accessToken = accessToken;
+  session.accessTokenValidUntil = new Date(now.getTime() + ACCESS_TOKEN_TTL);
+  await session.save();
+
   return { accessToken };
 };
 
 export const logout = async (refreshToken) => {
   const session = await SessionCollection.findOne({ refreshToken });
 
-  if (!session) {
-    throw createHttpError(401, 'Session not found');
-  }
+  if (!session) throw createHttpError(401, 'Session not found');
 
   await SessionCollection.deleteOne({ _id: session._id });
 };

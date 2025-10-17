@@ -1,0 +1,37 @@
+tags:
+  - Auth
+summary: Refresh access token
+operationId: refreshToken
+description: Get new access token using refresh token
+security:
+  - bearerAuth: []
+requestBody:
+  required: true
+  content:
+    application/json:
+      schema:
+        type: object
+        required:
+          - refreshToken
+        properties:
+          sessionId:
+            type: string
+            example: 68b0430102d75a5ad820f889
+          refreshToken:
+            type: string
+            example: eyJhbGciOiJIUzI1NiIsInR...
+responses:
+  '200':
+    description: Successfully refreshed a session!
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            accessToken:
+              type: string
+              example: eyJhbGciOiJIUzI1NiIsInR...
+  '400':
+    $ref: '../../components/responses/400.yaml'
+  '401':
+    $ref: '../../components/responses/401.yaml'

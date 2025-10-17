@@ -1,0 +1,76 @@
+tags:
+  - Contacts
+summary: Update contact
+operationId: updateContact
+description: 'Update a contact partially by ID'
+security:
+  - bearerAuth: []
+parameters:
+  - name: id
+    in: path
+    required: true
+    description: Contact ID
+    schema:
+      type: string
+requestBody:
+  content:
+    multipart/form-data:
+      schema:
+        type: object
+        properties:
+          name:
+            description: "Contact's name"
+            type: string
+            example: 'Donald Thrump'
+          phoneNumber:
+            description: "Contact's phone number"
+            type: string
+            example: '+380000000001'
+          email:
+            description: "Contact's email"
+            type: string
+            example: 'oleh1@example.com'
+          isFavourite:
+            description: 'Contact is in favourite list'
+            type: boolean
+            example: true
+          contactType:
+            description: 'Contact type'
+            type: string
+            example: 'work'
+            enum: ['work', 'home', 'personal']
+          photo:
+            description: "Contact's photo"
+            type: string
+            format: binary
+responses:
+  '200':
+    description: Successfully updated contact
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - status
+            - message
+            - data
+          properties:
+            status:
+              type: integer
+              example: 200
+            message:
+              type: string
+              example: Successfully updated a contact!
+            data:
+              type: object
+              $ref: '../../../components/schemas/contact.yaml'
+  '400':
+    description: Invalid request payload
+    $ref: '../../../components/responses/400.yaml'
+
+  '401':
+    description: 'Need to be authorized to patch a contact!'
+    $ref: '../../../components/responses/401.yaml'
+  '404':
+    description: 'Contact not found by id!'
+    $ref: '../../../components/responses/404.yaml'

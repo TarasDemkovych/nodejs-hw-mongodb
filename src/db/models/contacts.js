@@ -1,7 +1,11 @@
-import { model, Schema } from 'mongoose';
+import { model, Schema, Types } from 'mongoose';
 
 const contactSchema = new Schema(
   {
+    userId: {
+      type: Types.ObjectId,
+      ref: 'users',
+    },
     name: {
       type: String,
       required: true,
@@ -25,9 +29,13 @@ const contactSchema = new Schema(
       enum: ['work', 'home', 'personal'],
       default: 'personal',
     },
+    photo: {
+      type: String,
+      default: null,
+    },
   },
   {
-    timeseries: true,
+    timestamps: true,
     versionKey: false,
   },
 );

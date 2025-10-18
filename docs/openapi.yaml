@@ -12,8 +12,10 @@ tags:
   - name: Auth
     description: Auth operations.
 servers:
+  - url: https://nodejs-hw-mongodb-production-9179.up.railway.app
+    description: Deployed server
   - url: http://localhost:3000
-  - url: https://nodejs-hw-mongodb-avmz.onrender.com
+    description: Local server
 paths:
   /contacts:
     get:
